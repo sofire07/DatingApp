@@ -38,6 +38,7 @@ namespace DatingApp
             services.AddScoped<ApplicationDbContext>();
             services.AddScoped<UserLogic>();
             services.AddScoped<Repo>();
+            services.AddScoped<Mapper>();
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -81,6 +82,17 @@ namespace DatingApp
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWTSettings:Secret"]))
                 };
             });
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("policy",
+                    builder =>
+                    {
+                        builder.WithOrigins("https://localhost:4200")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                    });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -96,6 +108,7 @@ namespace DatingApp
             app.UseHttpsRedirection();
 
             app.UseRouting();
+            app.UseCors("policy");
 
             app.UseAuthentication();
             app.UseAuthorization();

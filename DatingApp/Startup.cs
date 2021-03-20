@@ -1,3 +1,4 @@
+using DatingApp.Middleware;
 using Logic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -13,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Model;
+using Model.Helpers;
 using Repository;
 using System;
 using System.Collections.Generic;
@@ -36,9 +38,9 @@ namespace DatingApp
         {
 
             services.AddScoped<ApplicationDbContext>();
-            services.AddScoped<UserLogic>();
-            services.AddScoped<Repo>();
-            services.AddScoped<Mapper>();
+            services.AddScoped<IUserLogic, UserLogic>();
+            services.AddScoped<IUserRepo, UserRepo>();
+            services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -54,7 +56,7 @@ namespace DatingApp
                 {
                     options.User.RequireUniqueEmail = true;
                     options.Password.RequiredLength = 8;
-                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequireNonAlphanumeric = true;
                 })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
@@ -98,13 +100,9 @@ namespace DatingApp
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "DatingApp v1"));
-            }
-
+            app.UseMiddleware<ExceptionMiddleware>();
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "DatingApp v1"));
             app.UseHttpsRedirection();
 
             app.UseRouting();

@@ -57,7 +57,8 @@ namespace Logic
             if (!String.IsNullOrEmpty(updatedUser.LookingFor) && user.LookingFor != updatedUser.LookingFor) user.LookingFor = updatedUser.LookingFor;
             if (!String.IsNullOrEmpty(updatedUser.PhoneNumber) && user.PhoneNumber != updatedUser.PhoneNumber) user.PhoneNumber = updatedUser.PhoneNumber;
             if (!String.IsNullOrEmpty(updatedUser.Email) && user.Email != updatedUser.Email) user.Email = updatedUser.Email;
-            return await _repo.EditUser(user);
+            await _repo.EditUser(user);
+            return await _repo.SaveAllAsync();
         }
 
         public async Task SeedDatabase()

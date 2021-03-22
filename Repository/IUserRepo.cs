@@ -14,8 +14,10 @@ namespace Repository
 
         Task<ApplicationUser> GetUserByUsername(string username);
 
-        Task<bool> EditUser(ApplicationUser user);
+        Task EditUser(ApplicationUser user);
 
         Task<bool> SaveAllAsync();
+
+        Task DeletePhoto(Photo photo);
     }
 }

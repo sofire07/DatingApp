@@ -30,14 +30,18 @@ namespace Repository
             return await _context.AppUsers.Include(x => x.Photos).FirstOrDefaultAsync(x => x.UserName == username);
         }
 
-        public async Task<bool> EditUser(ApplicationUser user)
+        public async Task EditUser(ApplicationUser user)
         {
-            _context.AppUsers.Update(user);
-            return await SaveAllAsync();
+            _context.Entry(user).State = EntityState.Modified;
         }
 
         public async Task<bool> SaveAllAsync(){
             return await _context.SaveChangesAsync() > 0; 
+        }
+
+        public async Task DeletePhoto(Photo photo)
+        {
+            _context.Photos.Remove(photo);
         }
 
     }

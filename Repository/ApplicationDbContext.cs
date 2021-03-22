@@ -7,6 +7,7 @@ namespace Repository
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public DbSet<ApplicationUser> AppUsers { get; set; }
+        public DbSet<Photo> Photos { get; set; }
 
         public ApplicationDbContext()
         { }

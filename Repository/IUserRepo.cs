@@ -1,4 +1,6 @@
 ﻿using Model;
+using Model.DataTransfer;
+using Model.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,6 +15,9 @@ namespace Repository
         Task<ApplicationUser> GetUserById(string id);
 
         Task<ApplicationUser> GetUserByUsername(string username);
+        Task<PagedList<UserDto>> GetUserDtos(UserParams userParams);
+
+        Task<UserDto> GetUserDto(string username);
 
         Task EditUser(ApplicationUser user);
 

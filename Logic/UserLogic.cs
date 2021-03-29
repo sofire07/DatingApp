@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Model;
 using Model.DataTransfer;
+using Model.Helpers;
 using Repository;
 using System;
 using System.Collections.Generic;
@@ -24,16 +25,18 @@ namespace Logic
             _userManager = userManager;
         }
 
-        public async Task<List<UserDto>> GetAllUsers()
+        public async Task<PagedList<UserDto>> GetAllUsers(UserParams userParams, string username)
         {
-            List<UserDto> userDtos = new List<UserDto>();
-            var users = await _repo.GetAllUsers();
-            foreach(ApplicationUser u in users)
+            var user = await _repo.GetUserByUsername(username);
+            userParams.CurrentUsername = username;
+
+            if (string.IsNullOrEmpty(userParams.Gender))
             {
-                UserDto userDto = _mapper.Map<UserDto>(u);
-                userDtos.Add(userDto);
+                userParams.Gender = user.Gender == "male" ? "female" : "male";
             }
-            return userDtos;
+
+            return await _repo.GetUserDtos(userParams);
+
         }
 
         public async Task<UserDto> GetUserById(string id)
@@ -43,7 +46,7 @@ namespace Logic
 
         public async Task<UserDto> GetUserByUsername(string username)
         {
-            return _mapper.Map<UserDto>(await _repo.GetUserByUsername(username));
+            return await _repo.GetUserDto(username);
         }
 
         public async Task<bool> EditUser(UserLoggedInDto updatedUser)
@@ -61,14 +64,5 @@ namespace Logic
             return await _repo.SaveAllAsync();
         }
 
-        public async Task SeedDatabase()
-        {
-            var userData = await System.IO.File.ReadAllTextAsync("C:/Users/csoph/Desktop/Revature/Practice/DatingApp/DatingApp/Repository/UserSeedData.json");
-            var users = JsonSerializer.Deserialize<List<ApplicationUser>>(userData);
-            foreach (var user in users)
-            {
-                var result = await _userManager.CreateAsync(user, "Password123!");
-            }
-        }
     }
 }

@@ -21,10 +21,5 @@ namespace Model
         public string State { get; set; }
         public ICollection<Photo> Photos { get; set; }
 
-        public int GetAge()
-        {
-            return DoB.CalculateAge();
-        }
-
     }
 }

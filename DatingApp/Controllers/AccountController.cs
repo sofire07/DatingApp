@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Logic;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Model;
 using Model.DataTransfer;
+using Model.Extensions;
 using Repository;
 using System;
 using System.Collections.Generic;
@@ -28,7 +30,7 @@ namespace DatingApp.Controllers
         private readonly IMapper mapper;
         private readonly IUserRepo repo;
         private IConfiguration configuration { get; }
-        
+
 
         public AccountController(UserManager<ApplicationUser> _userManager, IConfiguration _configuration, IMapper _mapper, IUserRepo _repo, IUserLogic _userLogic)
         {
@@ -76,8 +78,8 @@ namespace DatingApp.Controllers
                     ulid.TokenExpires = token.ValidTo;
                     return Ok(ulid);
                 }
-                else { 
-                    return Unauthorized("Incorrect password."); 
+                else {
+                    return Unauthorized("Incorrect password.");
                 }
             }
             return Unauthorized("Username not registered");
@@ -100,14 +102,14 @@ namespace DatingApp.Controllers
                 State = registerModel.State,
                 Interests = registerModel.Interests,
                 LookingFor = registerModel.LookingFor,
-                Gender = registerModel.Gender,
+                Gender = registerModel.Gender.ToLower(),
             };
-            
+
             var result = await userManager.CreateAsync(newUser, registerModel.Password);
             if (!result.Succeeded)
             {
                 StringBuilder sb = new StringBuilder();
-                foreach(IdentityError ie in result.Errors) {
+                foreach (IdentityError ie in result.Errors) {
                     sb.Append(ie.Description + " ");
                 }
                 return Unauthorized(sb.ToString());
@@ -115,6 +117,25 @@ namespace DatingApp.Controllers
 
             return true;
 
+        }
+
+        [HttpPost("update-password")]
+        [Authorize]
+        public async Task<IActionResult> UpdatePassword([FromBody] EditPassword ep)
+        {
+            var username = User.GetUsername();
+            var user = await userManager.FindByNameAsync(username);
+            var result = await userManager.ChangePasswordAsync(user, ep.OldPassword, ep.NewPassword);
+            if (!result.Succeeded)
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (IdentityError ie in result.Errors)
+                {
+                    sb.Append(ie.Description + " ");
+                }
+                return BadRequest(sb.ToString());
+            }
+            return NoContent();
         }
 
 

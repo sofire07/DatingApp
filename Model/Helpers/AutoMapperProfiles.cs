@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DatingApp.Extensions;
 using Model.DataTransfer;
 using System;
 using System.Collections.Generic;
@@ -15,12 +16,12 @@ namespace Model.Helpers
         {
             CreateMap<ApplicationUser, UserDto>()
                 .ForMember(dest => dest.PhotoUrl, opt => opt.MapFrom(src =>
-                     src.Photos.FirstOrDefault(x => x.IsMain).Url));
+                     src.Photos.FirstOrDefault(x => x.IsMain).Url))
+                .ForMember(dest => dest.Age, options => options.MapFrom(src => src.DoB.CalculateAge()));
             CreateMap<ApplicationUser, UserLoggedInDto>()
                  .ForMember(dest => dest.PhotoUrl, opt => opt.MapFrom(src =>
-                     src.Photos.FirstOrDefault(x => x.IsMain).Url));
-
-
+                     src.Photos.FirstOrDefault(x => x.IsMain).Url))
+                 .ForMember(dest => dest.Age, options => options.MapFrom(src => src.DoB.CalculateAge()));
             CreateMap<Photo, PhotoDto>();
             CreateMap<PhotoDto, Photo>();
             CreateMap<UserLoggedInDto, ApplicationUser>();

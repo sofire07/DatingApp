@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Model;
 using Model.DataTransfer;
 using Model.Extensions;
+using Model.Helpers;
 using Repository;
 using System;
 using System.Collections.Generic;
@@ -35,16 +36,11 @@ namespace DatingApp.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetUsers()
+        public async Task<IActionResult> GetUsers([FromQuery]UserParams userParams)
         {
-            List<UserDto> userList = await _logic.GetAllUsers();
-
-            //Seeds DB if no users exist
-            if (userList.Count == 0) {
-                await _logic.SeedDatabase();
-                return Ok(await _logic.GetAllUsers());
-            }
-
+            var username = User.GetUsername();
+            var userList = await _logic.GetAllUsers(userParams, username);
+            Response.AddPaginationHeader(userList.CurrentPage, userList.TotalPages, userList.PageSize, userList.TotalCount);
             return Ok(userList);
         }
 
@@ -93,6 +89,7 @@ namespace DatingApp.Controllers
         }
 
         [HttpPut("set-main-photo/{photoId}")]
+        [Authorize]
         public async Task<IActionResult> SetMainPhoto(int photoId)
         {
             var username = User.GetUsername();
@@ -103,6 +100,7 @@ namespace DatingApp.Controllers
         }
 
         [HttpDelete("delete-photo/{photoId}")]
+        [Authorize]
         public async Task<IActionResult> DeletePhoto(int photoId)
         {
             var username = User.GetUsername();

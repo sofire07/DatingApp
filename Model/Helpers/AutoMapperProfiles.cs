@@ -24,9 +24,16 @@ namespace Model.Helpers
                  .ForMember(dest => dest.Age, options => options.MapFrom(src => src.DoB.CalculateAge()));
             CreateMap<Photo, PhotoDto>();
             CreateMap<PhotoDto, Photo>();
+
             CreateMap<UserLoggedInDto, ApplicationUser>();
+
             CreateMap<UserDto, ApplicationUser>();
             CreateMap<UserDto, UserLoggedInDto>();
+            CreateMap<Message, MessageDto>()
+                .ForMember(dest => dest.SenderPhotoUrl, opt => opt.MapFrom(src =>
+                     src.Sender.Photos.FirstOrDefault(x => x.IsMain).Url))
+                .ForMember(dest => dest.RecipientPhotoUrl, opt => opt.MapFrom(src =>
+                     src.Recipient.Photos.FirstOrDefault(x => x.IsMain).Url));
         }
     }
 }

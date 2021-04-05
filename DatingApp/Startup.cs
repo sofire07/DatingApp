@@ -1,5 +1,7 @@
 using DatingApp.Middleware;
+using DatingApp.SignalR;
 using Logic;
+using Logic.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -12,8 +14,10 @@ using Microsoft.OpenApi.Models;
 using Model;
 using Model.Helpers;
 using Repository;
+using Repository.Interfaces;
 using System;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DatingApp
 {
@@ -30,14 +34,21 @@ namespace DatingApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<CloudinarySettings>(Configuration.GetSection("Cloudinary"));
+            services.AddSignalR();
+            services.AddSingleton<PresenceTracker>();
             services.AddScoped<ApplicationDbContext>();
             services.AddScoped<IUserLogic, UserLogic>();
             services.AddScoped<IPhotoLogic, PhotoLogic>();
             services.AddScoped<IUserRepo, UserRepo>();
             services.AddScoped<IPhotoService, PhotoService>();
+            services.AddScoped<ILikeRepository, LikeRepository>();
+            services.AddScoped<ILikeLogic, LikeLogic>();
+            services.AddScoped<IMessageRepository, MessageRepository>();
+            services.AddScoped<IMessageLogic, MessageLogic>();
             services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
 
             services.AddControllers();
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "DatingApp", Version = "v1" });
@@ -46,7 +57,7 @@ namespace DatingApp
             services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("LocalDB")));
 
             // ASP.NET Core Identity for authentication
-            services.AddIdentity<ApplicationUser, IdentityRole>
+            services.AddIdentity<ApplicationUser, ApplicationRole>
                 (options =>
                 {
                     options.User.RequireUniqueEmail = true;
@@ -78,6 +89,19 @@ namespace DatingApp
                     ValidIssuer = Configuration["JWTSettings:ValidIssuer"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWTSettings:Secret"]))
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             services.AddCors(options =>
@@ -87,6 +111,7 @@ namespace DatingApp
                     {
                         builder.WithOrigins("https://localhost:4200")
                         .AllowAnyHeader()
+                        .AllowCredentials()
                         .AllowAnyMethod();
                     });
             });
@@ -109,6 +134,8 @@ namespace DatingApp
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<PresenceHub>("hubs/presence");
+                endpoints.MapHub<MessageHub>("hubs/message");
             });
         }
     }

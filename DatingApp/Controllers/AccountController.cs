@@ -26,19 +26,26 @@ namespace DatingApp.Controllers
     public class AccountController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> userManager;
+        private readonly RoleManager<ApplicationRole> roleManager;
         private readonly IUserLogic userLogic;
         private readonly IMapper mapper;
         private readonly IUserRepo repo;
         private IConfiguration configuration { get; }
 
 
-        public AccountController(UserManager<ApplicationUser> _userManager, IConfiguration _configuration, IMapper _mapper, IUserRepo _repo, IUserLogic _userLogic)
+        public AccountController(UserManager<ApplicationUser> _userManager, 
+            IConfiguration _configuration, 
+            IMapper _mapper, 
+            IUserRepo _repo, 
+            IUserLogic _userLogic,
+            RoleManager<ApplicationRole> _roleManager)
         {
             userManager = _userManager;
             mapper = _mapper;
             configuration = _configuration;
             repo = _repo;
             userLogic = _userLogic;
+            roleManager = _roleManager;
         }
 
         [HttpPost("login")]
@@ -60,6 +67,7 @@ namespace DatingApp.Controllers
                     foreach (var userRole in userRoles)
                     {
                         authClaims.Add(new Claim(ClaimTypes.Role, userRole));
+                        authClaims.Add(new Claim("role", userRole));
                     }
 
                     var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWTSettings:Secret"]));
@@ -90,6 +98,14 @@ namespace DatingApp.Controllers
         {
             var user = await userManager.FindByNameAsync(registerModel.UserName);
             if (user != null) return Conflict("User with that username already exists.");
+
+            if (!await roleManager.RoleExistsAsync("Admin"))
+            {
+                await roleManager.CreateAsync(new ApplicationRole { Name = "Admin" });
+                await roleManager.CreateAsync(new ApplicationRole { Name = "Moderator" });
+                await roleManager.CreateAsync(new ApplicationRole { Name = "User" });
+            }
+
             ApplicationUser newUser = new ApplicationUser
             {
                 FirstName = registerModel.FirstName,
@@ -114,6 +130,11 @@ namespace DatingApp.Controllers
                 }
                 return Unauthorized(sb.ToString());
             }
+            //if(await userManager.GetUsersInRoleAsync("Admin") == null)
+            //{
+            //    userManager.AddToRoleAsync(newUser, "Admin");
+            //}
+            await userManager.AddToRoleAsync(newUser, "User");
 
             return true;
 

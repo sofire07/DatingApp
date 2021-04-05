@@ -26,6 +26,11 @@ namespace Logic
             _mapper = mapper;
         }
 
+        public async Task<bool> AddGroup(Group group)
+        {
+            return await _messageRepo.AddGroup(group);
+        }
+
         public async Task<MessageDto> AddMessage(CreateMessageDto dto, string sender)
         {
             var loggedIn = await _userRepo.GetUserByUsername(sender);
@@ -44,9 +49,19 @@ namespace Logic
             return null;
         }
 
+        public async Task<Connection> GetConnection(string connectionId)
+        {
+            return await _messageRepo.GetConnection(connectionId);
+        }
+
         public async Task<MessageDto> GetMessage(int id)
         {
             return _mapper.Map<MessageDto>(await _messageRepo.GetMessage(id));
+        }
+
+        public async Task<Group> GetMessageGroup(string groupName)
+        {
+            return await _messageRepo.GetMessageGroup(groupName);
         }
 
         public async Task<PagedList<MessageDto>> GetMessagesForUser(MessageParams messageParams)
@@ -71,6 +86,11 @@ namespace Logic
 
             return _mapper.Map<IEnumerable<MessageDto>>(messages);
 
+        }
+
+        public async Task<bool> RemoveConnection(Connection connection)
+        {
+            return await _messageRepo.RemoveConnection(connection);
         }
     }
 }

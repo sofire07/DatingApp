@@ -10,7 +10,10 @@ namespace Logic.Interfaces
 {
     public interface IMessageLogic
     {
-
+        Task<bool> AddGroup(Group group);
+        Task<bool> RemoveConnection(Connection connection);
+        Task<Connection> GetConnection(string connectionId);
+        Task<Group> GetMessageGroup(string groupName);
         Task<MessageDto> AddMessage(CreateMessageDto dto, string sender);
         Task<MessageDto> GetMessage(int id);
         Task<PagedList<MessageDto>> GetMessagesForUser(MessageParams messageParams);

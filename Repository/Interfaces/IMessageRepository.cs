@@ -10,6 +10,10 @@ namespace Repository.Interfaces
 {
     public interface IMessageRepository
     {
+        Task<bool> AddGroup(Group group);
+        Task<bool> RemoveConnection(Connection connection);
+        Task<Connection> GetConnection(string connectionId);
+        Task<Group> GetMessageGroup(string groupName);
         Task<bool> AddMessage(Message message);
         Task<Message> GetMessage(int id);
         Task<PagedList<MessageDto>> GetMessagesForUser(MessageParams messageParams);
